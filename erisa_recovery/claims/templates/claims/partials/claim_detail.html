@@ -1,0 +1,43 @@
+<!-- claims/templates/claims/partials/claim_detail.html (Corrected) -->
+
+<div hx-target="this" hx-swap="outerHTML">
+    <div class="p-6 space-y-4">
+        <div>
+            <h4 class="font-semibold text-gray-600">Denial Reason</h4>
+            <!-- Check if details exist before trying to access attributes -->
+            <p class="text-gray-800">{% if details %}{{ details.denial_reason|default:"N/A" }}{% else %}No details available.{% endif %}</p>
+        </div>
+        <div>
+            <h4 class="font-semibold text-gray-600">CPT Codes</h4>
+            <p class="text-gray-800 font-mono">{% if details %}{{ details.cpt_codes|default:"N/A" }}{% else %}No details available.{% endif %}</p>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Form for adding/editing notes -->
+        <form hx-post="{% url 'save_note' claim.id %}" class="space-y-2">
+            {% csrf_token %}
+            <label for="notes" class="font-semibold text-gray-600">Notes</label>
+            <textarea name="notes" id="notes" rows="4" 
+                      class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Add custom notes here...">{% if details %}{{ details.notes|default:"" }}{% endif %}</textarea>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Note</button>
+        </form>
+    </div>
+
+    <!-- Modal Footer with Flag Button -->
+    <div class="flex justify-end p-4 bg-gray-50 border-t">
+        <form hx-post="{% url 'flag_claim' claim.id %}">
+            {% csrf_token %}
+            {% if claim.is_flagged %}
+                <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
+                    &#9733; Unflag for Review
+                </button>
+            {% else %}
+                <button type="submit" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                    &#9734; Flag for Review
+                </button>
+            {% endif %}
+        </form>
+    </div>
+</div>

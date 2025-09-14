@@ -1,0 +1,98 @@
+<!-- claims/templates/claims/partials/claims_table.html (Corrected) -->
+
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"></th> <!-- For Flag -->
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Claim ID</th>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Patient Name</th>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Insurer</th>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Billed</th>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Paid</th>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Discharge Date</th>
+                <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-700">
+            {% for claim in page_obj %}
+            <!-- ** THE hx-get, hx-target, and @click triggers have been moved to the button ** -->
+            <!-- ** This makes the interaction clearer and avoids the entire row being a single clickable target ** -->
+            <tr id="claim-row-{{ claim.id }}" 
+                class="border-b border-gray-200 hover:bg-gray-50 {% if claim.is_flagged %} bg-orange-50 {% endif %}">
+                
+                <td class="py-3 px-4">
+                    {% if claim.is_flagged %}
+                    <span title="Flagged for Review">🚩</span>
+                    {% endif %}
+                </td>
+                <td class="py-3 px-4">{{ claim.id }}</td>
+                <td class="py-3 px-4">{{ claim.patient_name }}</td>
+                
+                <!-- ** RESTORED DATA COLUMNS ** -->
+                <td class="py-3 px-4">{{ claim.insurer_name }}</td>
+                <td class="py-3 px-4">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        {% if claim.status == 'Paid' %} bg-green-100 text-green-800 
+                        {% elif claim.status == 'Denied' %} bg-red-100 text-red-800 
+                        {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                        {{ claim.get_status_display }}
+                    </span>
+                </td>
+                <td class="py-3 px-4">${{ claim.billed_amount|floatformat:2 }}</td>
+                <td class="py-3 px-4">${{ claim.paid_amount|floatformat:2 }}</td>
+                <!-- ** END OF RESTORED COLUMNS ** -->
+
+                <td class="py-3 px-4">{{ claim.discharge_date }}</td>
+                <td class="py-3 px-4">
+                    <button 
+                        hx-get="{% url 'claim_detail' claim.id %}"
+                        hx-target="#modal-content"
+                        @click="$dispatch('open-modal')"
+                        class="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded hover:bg-blue-600">
+                        View Details
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center py-4 text-gray-500">No claims found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination with HTMX (This section is correct and remains unchanged) -->
+<div class="mt-6">
+    {% if page_obj.has_other_pages %}
+    <nav class="flex items-center justify-between">
+        <div class="flex-1 flex justify-between sm:justify-end">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" 
+                   hx-get="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" 
+                   hx-target="#claims-table-container" 
+                   hx-push-url="true"
+                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+            {% endif %}
+
+            <span class="mx-4 text-gray-600">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" 
+                   hx-get="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" 
+                   hx-target="#claims-table-container" 
+                   hx-push-url="true"
+                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+</div>
